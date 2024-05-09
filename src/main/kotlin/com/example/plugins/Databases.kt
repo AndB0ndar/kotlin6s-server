@@ -1,7 +1,9 @@
 package com.example.plugins
 
+import com.typesafe.config.ConfigFactory
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.config.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -9,7 +11,7 @@ import java.sql.*
 import kotlinx.coroutines.*
 
 fun Application.configureDatabases(): Connection {
-    return connectToPostgres(embedded = true)
+    return connectToPostgres(embedded = false)
 }
 
 /**

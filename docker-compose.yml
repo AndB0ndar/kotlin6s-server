@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - "6000:5432"
+    environment:
+      POSTGRES_DB: queue
+      POSTGRES_USER: arbon
+      POSTGRES_PASSWORD: arbon1874
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data

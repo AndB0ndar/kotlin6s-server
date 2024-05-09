@@ -9,25 +9,33 @@ import java.util.*
 class AuthorizationService(private val connection: Connection) {
 
     companion object {
+        private const val TABLE_NAME = "UserAuth"
+        private const val COLUMN_ID = "ID"
+        private const val COLUMN_LOGIN = "LOGIN"
+        private const val COLUMN_EMAIL = "EMAIL"
+        private const val COLUMN_GROUP_ID = "GROUP_ID"
+        private const val COLUMN_PASSWORD_HASH = "PASSWORD_HASH"
+        private const val COLUMN_TOKEN = "TOKEN"
         private const val CREATE_TABLE_USERS =
-            "CREATE TABLE IF NOT EXISTS UserAuth (" +
-                    "ID SERIAL PRIMARY KEY" +
-                    ", LOGIN VARCHAR(255)" +
-                    ", EMAIL VARCHAR(255)" +
-                    ", GROUP VARCHAR(255)" +
-                    ", PASSWORD_HASH VARCHAR(255)" +
-                    ", TOKEN VARCHAR(255)" +
+            "CREATE TABLE IF NOT EXISTS $TABLE_NAME (" +
+                    "$COLUMN_ID SERIAL PRIMARY KEY" +
+                    ", $COLUMN_LOGIN VARCHAR(255)" +
+                    ", $COLUMN_EMAIL VARCHAR(255)" +
+                    ", $COLUMN_GROUP_ID INT" +
+                    ", $COLUMN_PASSWORD_HASH VARCHAR(255)" +
+                    ", $COLUMN_TOKEN VARCHAR(255)" +
+                    ", FOREIGN KEY ($COLUMN_GROUP_ID) REFERENCES Groups($COLUMN_ID)" +
                     ");"
         private const val INSERT_USER =
-            "INSERT INTO UserAuth (LOGIN, EMAIL, GROUP, PASSWORD_HASH, TOKEN) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO $TABLE_NAME ($COLUMN_LOGIN, $COLUMN_EMAIL, $COLUMN_GROUP_ID, $COLUMN_PASSWORD_HASH, $COLUMN_TOKEN) VALUES (?, ?, ?, ?, ?)"
         private const val SELECT_USER_BY_LOGIN =
-            "SELECT * FROM UserAuth WHERE LOGIN = ?"
+            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_LOGIN = ?"
         private const val SELECT_USER_BY_EMAIL =
-            "SELECT * FROM UserAuth WHERE EMAIL = ?"
+            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_EMAIL = ?"
         private const val SELECT_USER_BY_LOGIN_AND_PASSWORD =
-            "SELECT * FROM UserAuth WHERE LOGIN = ? AND PASSWORD_HASH = ?"
+            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_LOGIN = ? AND $COLUMN_PASSWORD_HASH = ?"
         private const val SELECT_USER_BY_EMAIL_AND_PASSWORD =
-            "SELECT * FROM UserAuth WHERE EMAIL = ? AND PASSWORD_HASH = ?"
+            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_EMAIL = ? AND $COLUMN_PASSWORD_HASH = ?"
     }
 
     init {
@@ -35,7 +43,7 @@ class AuthorizationService(private val connection: Connection) {
         statement.executeUpdate(CREATE_TABLE_USERS)
     }
 
-    fun register(login: String, email: String, group: String, password: String): String? {
+    fun register(login: String, email: String, groupId: Int, password: String): String? {
         if (checkUserExistsByLogin(login) || checkUserExistsByEmail(email)) {
             return null
         }
@@ -45,9 +53,9 @@ class AuthorizationService(private val connection: Connection) {
         val preparedStatement = connection.prepareStatement(INSERT_USER)
         preparedStatement.setString(1, login)
         preparedStatement.setString(2, email)
-        preparedStatement.setString(2, group)
-        preparedStatement.setString(3, hashedPassword)
-        preparedStatement.setString(4, token)
+        preparedStatement.setString(3, groupId.toString())
+        preparedStatement.setString(4, hashedPassword)
+        preparedStatement.setString(5, token)
         preparedStatement.executeUpdate()
         return token
     }
