@@ -1,8 +1,6 @@
 package com.example.plugins
 
-import com.example.handler.groupHandler
-import com.example.handler.loginHandler
-import com.example.handler.registerHandler
+import com.example.handler.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -17,5 +15,6 @@ fun Application.configureRouting(dbConnection: Connection) {
         loginHandler(dbConnection)
         registerHandler(dbConnection)
         groupHandler(dbConnection)
+        queueHandler(dbConnection)
     }
 }

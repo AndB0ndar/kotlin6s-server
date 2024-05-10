@@ -1,7 +1,7 @@
 package com.example.services
 
+import com.example.models.table.Group
 import java.sql.Connection
-import java.sql.ResultSet
 import java.sql.Statement
 
 class GroupService(private val connection: Connection) {
@@ -26,8 +26,6 @@ class GroupService(private val connection: Connection) {
                     ") VALUES (?, ?, ?, ?)"
         private const val SELECT_ALL_GROUP =
             "SELECT * FROM $TABLE_NAME"
-        private const val SELECT_GROUP_BY_ID =
-            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_ID = ?"
         private const val SELECT_GROUP_BY_NAME =
             "SELECT * FROM $TABLE_NAME WHERE $COLUMN_GROUP_NAME = ?"
     }
@@ -44,31 +42,48 @@ class GroupService(private val connection: Connection) {
         preparedStatement.setString(3, unitName)
         preparedStatement.setString(4, unitCourse)
 
-        val insertedRows = preparedStatement.executeUpdate()
-        if (insertedRows > 0) {
-            val generatedKeys = preparedStatement.generatedKeys
-            if (generatedKeys.next()) {
-                return generatedKeys.getInt(1)
-            }
+        preparedStatement.executeUpdate()
+        val generatedKeys = preparedStatement.generatedKeys
+        return if (generatedKeys.next()) {
+            generatedKeys.getInt(1)
+        } else {
+            return -1
         }
-        return -1
     }
 
-    fun getAllGroups(): ResultSet? {
+    fun getAllGroups(): List<Group> {
         val preparedStatement = connection.prepareStatement(SELECT_ALL_GROUP)
-        return preparedStatement.executeQuery().takeIf { it.next() }
+        val resultSet = preparedStatement.executeQuery()
+        val groups = mutableListOf<Group>()
+        while (resultSet.next()) {
+            groups.add(
+                Group(
+                    id = resultSet.getInt(COLUMN_ID),
+                    groupName = resultSet.getString(COLUMN_GROUP_NAME),
+                    groupSuffix = resultSet.getString(COLUMN_GROUP_SUFFIX),
+                    unitName = resultSet.getString(COLUMN_UNIT_NAME),
+                    unitCourse = resultSet.getString(COLUMN_UNIT_COURSE)
+                )
+            )
+        }
+        return groups
     }
 
-    fun getGroupById(groupId: Int): ResultSet? {
-        val preparedStatement = connection.prepareStatement(SELECT_GROUP_BY_ID)
-        preparedStatement.setInt(1, groupId)
-        return preparedStatement.executeQuery().takeIf { it.next() }
-    }
-
-    fun getGroupByName(groupName: String): ResultSet? {
+    fun getGroupByName(groupName: String): Group? {
         val preparedStatement = connection.prepareStatement(SELECT_GROUP_BY_NAME)
         preparedStatement.setString(1, groupName)
-        return preparedStatement.executeQuery().takeIf { it.next() }
+        val resultSet = preparedStatement.executeQuery()
+        return if (resultSet.next()) {
+            Group(
+                id = resultSet.getInt(COLUMN_ID),
+                groupName = resultSet.getString(COLUMN_GROUP_NAME),
+                groupSuffix = resultSet.getString(COLUMN_GROUP_SUFFIX),
+                unitName = resultSet.getString(COLUMN_UNIT_NAME),
+                unitCourse = resultSet.getString(COLUMN_UNIT_COURSE)
+            )
+        } else {
+            null
+        }
     }
 }
 

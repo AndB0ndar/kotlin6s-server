@@ -3,8 +3,6 @@ package com.example.utils
 import com.example.services.GroupService
 
 
-
-
 fun loadGroup(groupName: String, groupService: GroupService): Int {
     /*
     val url = "https://mirea.xyz/api/v1.3/"

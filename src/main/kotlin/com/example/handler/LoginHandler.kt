@@ -16,7 +16,7 @@ fun Route.loginHandler(dbConnection: Connection) {
     route("/login") {
         post {
             val receive = call.receive<LoginReceiveRemote>()
-            val token = authService.login(receive.login, receive.password)
+            val token: String? = authService.login(receive.login, receive.password)
             if (token == null){
                 call.respond(HttpStatusCode.BadRequest, "User not found")
             } else {

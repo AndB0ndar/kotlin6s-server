@@ -12,7 +12,8 @@ data class LoginReceiveRemote (
 @Serializable
 data class RegisterReceiveRemote (
     val login: String,
-    val email: String,
+    val firsName: String,
+    val lastName: String,
     val group: String,
     val password: String
 )
