@@ -26,6 +26,8 @@ class GroupService(private val connection: Connection) {
                     ") VALUES (?, ?, ?, ?)"
         private const val SELECT_ALL_GROUP =
             "SELECT * FROM $TABLE_NAME"
+        private const val SELECT_GROUP_BY_ID =
+            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_ID = ?"
         private const val SELECT_GROUP_BY_NAME =
             "SELECT * FROM $TABLE_NAME WHERE $COLUMN_GROUP_NAME = ?"
     }
@@ -67,6 +69,23 @@ class GroupService(private val connection: Connection) {
             )
         }
         return groups
+    }
+
+    fun getGroupById(groupId: Int): Group? {
+        val preparedStatement = connection.prepareStatement(SELECT_GROUP_BY_ID)
+        preparedStatement.setInt(1, groupId)
+        val resultSet = preparedStatement.executeQuery()
+        return if (resultSet.next()) {
+            Group(
+                id = resultSet.getInt(COLUMN_ID),
+                groupName = resultSet.getString(COLUMN_GROUP_NAME),
+                groupSuffix = resultSet.getString(COLUMN_GROUP_SUFFIX),
+                unitName = resultSet.getString(COLUMN_UNIT_NAME),
+                unitCourse = resultSet.getString(COLUMN_UNIT_COURSE)
+            )
+        } else {
+            null
+        }
     }
 
     fun getGroupByName(groupName: String): Group? {

@@ -1,13 +1,13 @@
 package com.example.services
 
-import com.example.models.table.QueuePos
+import com.example.models.table.QueueItem
 import java.sql.Connection
 import java.sql.Statement
 
 
 class QueuePosService(private val connection: Connection) {
     companion object {
-        private const val TABLE_NAME = "QueuePos"
+        private const val TABLE_NAME = "QueueItem"
         private const val COLUMN_ID = "ID"
         private const val COLUMN_QUEUE_ID = "QUEUE_ID"
         private const val COLUMN_USER_ID = "USER_ID"
@@ -65,15 +65,15 @@ class QueuePosService(private val connection: Connection) {
         }
     }
 
-    fun getAllQueuePos(queueId: Int, userId: Int): List<QueuePos> {
-        val queuePosList = mutableListOf<QueuePos>()
+    fun getAllQueuePos(queueId: Int, userId: Int): List<QueueItem> {
+        val queuePosList = mutableListOf<QueueItem>()
         val preparedStatement = connection.prepareStatement(SELECT_ALL_QUEUE_POS)
         preparedStatement.setInt(1, queueId)
         preparedStatement.setInt(2, userId)
         val resultSet = preparedStatement.executeQuery()
         while (resultSet.next()) {
             queuePosList.add(
-                QueuePos(
+                QueueItem(
                     id = resultSet.getInt(COLUMN_ID),
                     queueId = resultSet.getInt(COLUMN_QUEUE_ID),
                     userId = resultSet.getInt(COLUMN_USER_ID),

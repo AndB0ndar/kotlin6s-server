@@ -12,9 +12,10 @@ fun Application.configureRouting(dbConnection: Connection) {
         get("/") {
             call.respondText("Worked!")
         }
-        loginHandler(dbConnection)
-        registerHandler(dbConnection)
-        groupHandler(dbConnection)
-        queueHandler(dbConnection)
+        authorizationHandler(dbConnection)
+        route("/{token}") {
+            groupHandler(dbConnection)
+            queueHandler(dbConnection)
+        }
     }
 }

@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class QueuePos(
+data class QueueItem(
     val id: Int,
     val queueId: Int,
     val userId: Int,
