@@ -37,6 +37,8 @@ class AuthorizationService(private val connection: Connection) {
             "SELECT * FROM $TABLE_NAME WHERE $COLUMN_LOGIN = ? AND $COLUMN_PASSWORD_HASH = ?"
         private const val SELECT_USER_BY_TOKEN =
             "SELECT * FROM $TABLE_NAME WHERE $COLUMN_TOKEN = ?"
+        private const val SELECT_USER_BY_ID =
+            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_ID = ?"
     }
 
     init {
@@ -92,6 +94,23 @@ class AuthorizationService(private val connection: Connection) {
         }
     }
 
+    fun getUserById(userId: Int): User? {
+        val preparedStatement = connection.prepareStatement(SELECT_USER_BY_ID)
+        preparedStatement.setInt(1, userId)
+        val resultSet = preparedStatement.executeQuery()
+        return if (resultSet.next()) {
+            User(
+                id = resultSet.getInt(COLUMN_ID),
+                login = resultSet.getString(COLUMN_LOGIN),
+                firstName = resultSet.getString(COLUMN_FIRSTNAME),
+                lastName = resultSet.getString(COLUMN_LASTNAME),
+                groupId = resultSet.getInt(COLUMN_GROUP_ID),
+                token = resultSet.getString(COLUMN_TOKEN)
+            )
+        } else {
+            null
+        }
+    }
 
     private fun checkUserExistsByLogin(login: String): Boolean {
         val preparedStatement = connection.prepareStatement(SELECT_USER_BY_LOGIN)

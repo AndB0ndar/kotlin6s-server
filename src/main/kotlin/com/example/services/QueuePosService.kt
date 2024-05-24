@@ -28,7 +28,7 @@ class QueuePosService(private val connection: Connection) {
         private const val SELECT_MAX_POSITION =
             "SELECT MAX($COLUMN_POSITION) FROM $TABLE_NAME WHERE $COLUMN_QUEUE_ID = ? AND $COLUMN_USER_ID = ?"
         private const val SELECT_ALL_QUEUE_POS =
-            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_QUEUE_ID = ? AND $COLUMN_USER_ID = ?"
+            "SELECT * FROM $TABLE_NAME WHERE $COLUMN_QUEUE_ID = ?"
         private const val DELETE_QUEUE_POS =
             "DELETE FROM $TABLE_NAME WHERE $COLUMN_QUEUE_ID = ? AND $COLUMN_USER_ID = ?"
     }
@@ -65,11 +65,10 @@ class QueuePosService(private val connection: Connection) {
         }
     }
 
-    fun getAllQueuePos(queueId: Int, userId: Int): List<QueueItem> {
+    fun getAllQueuePos(queueId: Int): List<QueueItem> {
         val queuePosList = mutableListOf<QueueItem>()
         val preparedStatement = connection.prepareStatement(SELECT_ALL_QUEUE_POS)
         preparedStatement.setInt(1, queueId)
-        preparedStatement.setInt(2, userId)
         val resultSet = preparedStatement.executeQuery()
         while (resultSet.next()) {
             queuePosList.add(

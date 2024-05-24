@@ -10,3 +10,10 @@ data class QueueItem(
     val userId: Int,
     val position: Int
 )
+
+@Serializable
+data class QueueItemResponse(
+    val queueName: String,
+    val userLogin: String,
+    val position: Int
+)

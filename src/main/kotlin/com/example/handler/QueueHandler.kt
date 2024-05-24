@@ -2,6 +2,7 @@ package com.example.handler
 
 import com.example.models.*
 import com.example.models.table.Queue
+import com.example.models.table.QueueItemResponse
 import com.example.services.*
 import io.ktor.server.application.*
 import io.ktor.http.*
@@ -34,18 +35,16 @@ fun Route.queueHandler(dbConnection: Connection) {
 
             val userId = user.id
             val connectedQueueIds = connectionService.getQueueIdsByUser(userId)
+            val connectedQueues = mutableListOf<Queue>()
             if (connectedQueueIds.isNotEmpty()) {
-                val connectedQueues = mutableListOf<Queue>()
                 for (queueId in connectedQueueIds) {
                     val queue = queueService.getQueueById(queueId)
                     if (queue != null) {
                         connectedQueues.add(queue)
                     }
                 }
-                call.respond(connectedQueues)
-            } else {
-                call.respondText("No connected queues found")
             }
+            call.respond(connectedQueues)
         }
         post("/create") {
             val token = call.parameters["token"].toString()
@@ -79,34 +78,29 @@ fun Route.queueHandler(dbConnection: Connection) {
                 }
             }
         }
-        post("/delete/{id}") {
+        delete("/delete/{id}") {
             val token = call.parameters["token"].toString()
             val queueId = call.parameters["id"]?.toIntOrNull()
             // val queueId = call.receive<Int>()
 
             if (token.isEmpty() || queueId == null) {
                 call.respond(HttpStatusCode.BadRequest, "Invalid input parameters")
-                return@post
+                return@delete
             }
 
             val user = authService.getUserByToken(token)
             if (user == null) {
                 call.respond(HttpStatusCode.NotFound, "User not found")
-                return@post
+                return@delete
             }
 
             val connectionDeleted = connectionService.deleteConnection(user.id, queueId)
             if (!connectionDeleted) {
                 call.respond(HttpStatusCode.NotFound, "User is not connected to this queue")
-                return@post
+                return@delete
             }
-
             val queueDeleted = queueService.deleteQueue(queueId)
-            if (queueDeleted) {
-                call.respond(HttpStatusCode.OK, "Queue deleted successfully")
-            } else {
-                call.respond(HttpStatusCode.InternalServerError, "Failed to delete queue")
-            }
+            call.respond(queueDeleted)
         }
         post("/connect/{id}") {
             val token = call.parameters["token"].toString()
@@ -137,14 +131,22 @@ fun Route.queueHandler(dbConnection: Connection) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid queueId")
                     return@get
                 }
-                val user = authService.getUserByToken(token)
-                if (user == null) {
+                val queue = queueService.getQueueById(id)
+                if (queue == null) {
                     call.respond(HttpStatusCode.NotFound, "User not found")
                     return@get
                 }
-
-                val queuePosList = queuePosService.getAllQueuePos(id, user.id)
-                call.respond(queuePosList)
+                
+                val queuePosList = queuePosService.getAllQueuePos(id)
+                val queuePosResponseList = mutableListOf<QueueItemResponse>()
+                queuePosList.forEach { queueItem ->
+                    val user = authService.getUserById(queueItem.userId)
+                    if (user != null) {
+                        queuePosResponseList.add(QueueItemResponse(queue.queueName, user.login, queueItem.position))
+                    }
+                }
+                println(queuePosResponseList)
+                call.respond(queuePosResponseList)
             }
             post("/add") {
                 val token = call.parameters["token"].toString()
@@ -161,7 +163,7 @@ fun Route.queueHandler(dbConnection: Connection) {
                     return@post
                 }
 
-                if (queuePosService.getAllQueuePos(id, user.id).isNotEmpty()) {
+                if (queuePosService.getAllQueuePos(id).isNotEmpty()) {
                     call.respond(HttpStatusCode.Conflict, "User already exist")
                     return@post
                 }
@@ -174,22 +176,22 @@ fun Route.queueHandler(dbConnection: Connection) {
                     call.respond(HttpStatusCode.InternalServerError, "Failed to add queue position")
                 }
             }
-            post("/delete") {
+            delete("/delete") {
                 val token = call.parameters["token"].toString()
                 val id = call.parameters["id"]?.toIntOrNull()
                 if (token.isEmpty() || id == null) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid input parameters")
-                    return@post
+                    return@delete
                 }
 
                 val user = authService.getUserByToken(token)
                 if (user == null) {
                     call.respond(HttpStatusCode.NotFound, "User not found")
-                    return@post
+                    return@delete
                 }
 
                 val deleted = queuePosService.deleteQueuePos(id, user.id)
-                call.respond(if (deleted) HttpStatusCode.OK else HttpStatusCode.NotFound)
+                call.respond(if (deleted) HttpStatusCode.OK else HttpStatusCode.NotFound, deleted)
             }
         }
     }
